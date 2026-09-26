@@ -6,6 +6,7 @@ package web
 
 import (
 	"context"
+	"github.com/BZYA-Community/WebsiteCore/internal/model/joint"
 	"time"
 
 	api "github.com/BZYA-Community/WebsiteCore/auto/api/v1"
@@ -156,7 +157,7 @@ func (s *adminSrv) AdminUserList(req *web.AdminUserListReq) (*web.AdminUserListR
 			CreatedOn: user.CreatedOn,
 		})
 	}
-	return (*web.AdminUserListResp)(base.PageRespFrom(items, req.Page, req.PageSize, total)), nil
+	return (*web.AdminUserListResp)(joint.PageRespFrom(items, req.Page, req.PageSize, total)), nil
 }
 
 // AdminUserDetail 用户管理·用户详情(完整手机号)
@@ -261,7 +262,7 @@ func (s *adminSrv) AdminUserRoleLogs(req *web.AdminUserRoleLogsReq) (*web.AdminU
 			CreatedOn:    l.CreatedOn,
 		})
 	}
-	return (*web.AdminUserRoleLogsResp)(base.PageRespFrom(items, req.Page, req.PageSize, total)), nil
+	return (*web.AdminUserRoleLogsResp)(joint.PageRespFrom(items, req.Page, req.PageSize, total)), nil
 }
 
 func newAdminSrv(s *base.DaoServant, wc core.WebCache, settings *sitesetting.Service) api.Admin {

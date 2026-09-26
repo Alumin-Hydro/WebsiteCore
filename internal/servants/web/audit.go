@@ -6,6 +6,7 @@ package web
 
 import (
 	"fmt"
+	"github.com/BZYA-Community/WebsiteCore/internal/model/joint"
 	"regexp"
 	"strings"
 
@@ -44,7 +45,7 @@ func (s *auditSrv) ListAuditPosts(req *web.AdminAuditPostsReq) (*web.AdminAuditP
 		logrus.Errorf("Ds.MergePosts err: %s", err)
 		return nil, web.ErrGetPostsFailed
 	}
-	return (*web.AdminAuditPostsResp)(base.PageRespFrom(formated, req.Page, req.PageSize, total)), nil
+	return (*web.AdminAuditPostsResp)(joint.PageRespFrom(formated, req.Page, req.PageSize, total)), nil
 }
 
 // AuditPostAction 审核·通过/拒绝 (审核无权直接删除帖子 删除由作者自行操作)
@@ -269,7 +270,7 @@ func (s *auditSrv) ListAuditComments(req *web.AdminAuditCommentsReq) (*web.Admin
 		}
 		items = append(items, item)
 	}
-	return (*web.AdminAuditCommentsResp)(base.PageRespFrom(items, req.Page, req.PageSize, total)), nil
+	return (*web.AdminAuditCommentsResp)(joint.PageRespFrom(items, req.Page, req.PageSize, total)), nil
 }
 
 // auditBriefText 审核条目内容摘要(超长截断)
@@ -664,7 +665,7 @@ func (s *auditSrv) ListAuditNicknames(req *web.AdminAuditNicknamesReq) (*web.Adm
 			CreatedOn:       u.CreatedOn,
 		})
 	}
-	return (*web.AdminAuditNicknamesResp)(base.PageRespFrom(items, req.Page, req.PageSize, total)), nil
+	return (*web.AdminAuditNicknamesResp)(joint.PageRespFrom(items, req.Page, req.PageSize, total)), nil
 }
 
 // AuditNicknameAction 昵称审核·通过/拒绝
@@ -745,7 +746,7 @@ func (s *auditSrv) ListAuditLogs(req *web.AdminAuditLogsReq) (*web.AdminAuditLog
 			CreatedOn:    l.CreatedOn,
 		})
 	}
-	return (*web.AdminAuditLogsResp)(base.PageRespFrom(items, req.Page, req.PageSize, total)), nil
+	return (*web.AdminAuditLogsResp)(joint.PageRespFrom(items, req.Page, req.PageSize, total)), nil
 }
 
 // usernamesOf 批量获取用户名(宽松处理失败 缺失的用户名显示空)
