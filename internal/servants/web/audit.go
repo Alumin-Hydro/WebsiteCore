@@ -6,9 +6,10 @@ package web
 
 import (
 	"fmt"
-	"github.com/BZYA-Community/WebsiteCore/internal/model/joint"
 	"regexp"
 	"strings"
+
+	"github.com/BZYA-Community/WebsiteCore/internal/model/joint"
 
 	api "github.com/BZYA-Community/WebsiteCore/auto/api/v1"
 	"github.com/BZYA-Community/WebsiteCore/internal/core"

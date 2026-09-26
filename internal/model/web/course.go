@@ -5,8 +5,9 @@
 package web
 
 import (
-	"github.com/BZYA-Community/WebsiteCore/internal/model/joint"
 	"mime/multipart"
+
+	"github.com/BZYA-Community/WebsiteCore/internal/model/joint"
 
 	"github.com/BZYA-Community/WebsiteCore/internal/core/ms"
 	"github.com/BZYA-Community/WebsiteCore/internal/transport/httpx"

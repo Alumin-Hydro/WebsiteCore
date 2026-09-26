@@ -1,10 +1,11 @@
 package httpx
 
 import (
+	"net/http"
+
 	"github.com/BZYA-Community/WebsiteCore/internal/model/joint"
 	"github.com/BZYA-Community/WebsiteCore/pkg/xerror"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func Render(c *gin.Context, data any, err error) {
