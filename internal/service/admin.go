@@ -6,13 +6,11 @@ package service
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/BZYA-Community/WebsiteCore/internal/conf"
 	"github.com/BZYA-Community/WebsiteCore/internal/servants"
 	"github.com/Masterminds/semver/v3"
 	"github.com/fatih/color"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -38,52 +36,11 @@ func (s *adminService) String() string {
 }
 
 func newAdminEngine() *gin.Engine {
-	e := gin.New()
-	e.HandleMethodNotAllowed = true
-	e.Use(gin.Logger())
-	e.Use(gin.Recovery())
-
-	// 跨域配置
-	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowAllOrigins = true
-	corsConfig.AddAllowHeaders("Authorization")
-	e.Use(cors.New(corsConfig))
-
-	// 默认404
-	e.NoRoute(func(c *gin.Context) {
-		c.JSON(http.StatusNotFound, gin.H{
-			"code": 404,
-			"msg":  "Not Found",
-		})
-	})
-
-	// 默认405
-	e.NoMethod(func(c *gin.Context) {
-		c.JSON(http.StatusMethodNotAllowed, gin.H{
-			"code": 405,
-			"msg":  "Method Not Allowed",
-		})
-	})
-
-	return e
+	return newHTTPEngine(httpEngineOptions{API: true})
 }
 
 func newAdminService() Service {
-	addr := conf.AdminServerSetting.HttpIp + ":" + conf.AdminServerSetting.HttpPort
-	server := httpServers.from(addr, func() *httpServer {
-		engine := newAdminEngine()
-		return &httpServer{
-			baseServer: newBaseServe(),
-			e:          engine,
-			server: &http.Server{
-				Addr:           addr,
-				Handler:        engine,
-				ReadTimeout:    conf.AdminServerSetting.GetReadTimeout(),
-				WriteTimeout:   conf.AdminServerSetting.GetWriteTimeout(),
-				MaxHeaderBytes: 1 << 20,
-			},
-		}
-	})
+	server := sharedHTTPServer(conf.AdminServerSetting, newAdminEngine)
 	return &adminService{
 		baseHttpService: &baseHttpService{
 			server: server,

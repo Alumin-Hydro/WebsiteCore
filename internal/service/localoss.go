@@ -6,7 +6,6 @@ package service
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/BZYA-Community/WebsiteCore/internal/conf"
 	"github.com/BZYA-Community/WebsiteCore/internal/servants"
@@ -37,28 +36,11 @@ func (s *localossService) String() string {
 }
 
 func newLocalossEngine() *gin.Engine {
-	e := gin.New()
-	e.Use(gin.Logger())
-	e.Use(gin.Recovery())
-	return e
+	return newHTTPEngine(httpEngineOptions{})
 }
 
 func newLocalossService() Service {
-	addr := conf.LocalossServerSetting.HttpIp + ":" + conf.LocalossServerSetting.HttpPort
-	server := httpServers.from(addr, func() *httpServer {
-		engine := newLocalossEngine()
-		return &httpServer{
-			baseServer: newBaseServe(),
-			e:          engine,
-			server: &http.Server{
-				Addr:           addr,
-				Handler:        engine,
-				ReadTimeout:    conf.LocalossServerSetting.GetReadTimeout(),
-				WriteTimeout:   conf.LocalossServerSetting.GetWriteTimeout(),
-				MaxHeaderBytes: 1 << 20,
-			},
-		}
-	})
+	server := sharedHTTPServer(conf.LocalossServerSetting, newLocalossEngine)
 	return &localossService{
 		baseHttpService: &baseHttpService{
 			server: server,
