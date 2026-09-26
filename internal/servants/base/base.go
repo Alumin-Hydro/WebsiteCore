@@ -5,18 +5,16 @@
 package base
 
 import (
-	"context"
 	"fmt"
-	"math"
 	"net/http"
 
 	"github.com/BZYA-Community/WebsiteCore/internal/application/content"
+	"github.com/BZYA-Community/WebsiteCore/internal/application/searchindex"
 	"github.com/BZYA-Community/WebsiteCore/internal/conf"
 	"github.com/BZYA-Community/WebsiteCore/internal/core"
 	"github.com/BZYA-Community/WebsiteCore/internal/core/ms"
 	"github.com/BZYA-Community/WebsiteCore/internal/dao"
 	"github.com/BZYA-Community/WebsiteCore/internal/dao/cache"
-	"github.com/BZYA-Community/WebsiteCore/internal/infra/events"
 	"github.com/BZYA-Community/WebsiteCore/internal/model/joint"
 	"github.com/BZYA-Community/WebsiteCore/pkg/app"
 	"github.com/BZYA-Community/WebsiteCore/pkg/xerror"
@@ -36,6 +34,7 @@ type BaseServant struct {
 type DaoServant struct {
 	*BaseServant
 	*content.Views
+	index *searchindex.Index
 
 	Dsa   core.WebDataServantA
 	Ds    core.DataService
@@ -190,86 +189,6 @@ func (s *BaseServant) Render(c *gin.Context, data any, err error) {
 	}
 }
 
-func (s *DaoServant) PushAllPostToSearch() {
-	events.OnEvent(&pushAllPostToSearchEvent{
-		fn: s.pushAllPostToSearch,
-	})
-}
-
-func (s *DaoServant) pushAllPostToSearch() error {
-	ctx := context.Background()
-	if err := s.Redis.SetPushToSearchJob(ctx); err == nil {
-		defer s.Redis.DelPushToSearchJob(ctx)
-		splitNum := 1000
-		posts, totalRows, err := s.Ds.ListSyncSearchTweets(splitNum, 0)
-		if err != nil {
-			return fmt.Errorf("get first page tweets push to search failed: %s", err)
-		}
-		i, nums := 0, int(math.Ceil(float64(totalRows)/float64(splitNum)))
-		for {
-			postsFormated, xerr := s.Ds.MergePosts(posts)
-			if xerr != nil || len(posts) != len(postsFormated) {
-				continue
-			}
-			for i, pf := range postsFormated {
-				contentFormated := ""
-				for _, content := range pf.Contents {
-					if content.Type == ms.ContentTypeText || content.Type == ms.ContentTypeTitle || content.Type == ms.ContentTypeMarkdown {
-						contentFormated = contentFormated + content.Content + "\n"
-					}
-				}
-				docs := []core.TsDocItem{{
-					Post:    posts[i],
-					Content: contentFormated,
-				}}
-				s.Ts.AddDocuments(docs, fmt.Sprintf("%d", posts[i].ID))
-			}
-			if i++; i >= nums {
-				break
-			}
-			if posts, _, err = s.Ds.ListSyncSearchTweets(splitNum, i*splitNum); err != nil {
-				return fmt.Errorf("get tweets push to search failed: %s, limit[%d] offset[%d]", err, splitNum, i*splitNum)
-			}
-		}
-	} else {
-		return fmt.Errorf("redis: set JOB_PUSH_TO_SEARCH error: %w", err)
-	}
-	return nil
-}
-
-func (s *DaoServant) PushPostToSearch(post *ms.Post) {
-	events.OnEvent(&pushPostToSearchEvent{
-		fn:   s.pushPostToSearch,
-		post: post,
-	})
-}
-
-func (s *DaoServant) pushPostToSearch(post *ms.Post) {
-	postFormated := post.Format()
-	postFormated.User = &ms.UserFormated{
-		ID: post.UserID,
-	}
-	contents, _ := s.Ds.GetPostContentsByIDs([]int64{post.ID})
-	for _, content := range contents {
-		postFormated.Contents = append(postFormated.Contents, content.Format())
-	}
-	contentFormated := ""
-	for _, content := range postFormated.Contents {
-		if content.Type == ms.ContentTypeText || content.Type == ms.ContentTypeTitle || content.Type == ms.ContentTypeMarkdown {
-			contentFormated = contentFormated + content.Content + "\n"
-		}
-	}
-	docs := []core.TsDocItem{{
-		Post:    post,
-		Content: contentFormated,
-	}}
-	s.Ts.AddDocuments(docs, fmt.Sprintf("%d", post.ID))
-}
-
-func (s *DaoServant) DeleteSearchPost(post *ms.Post) error {
-	return s.Ts.DeleteDocuments([]string{fmt.Sprintf("%d", post.ID)})
-}
-
 func NewBindAnyFn() func(c *gin.Context, obj any) error {
 	if conf.UseSentryGin() {
 		return bindAnySentry
@@ -293,12 +212,15 @@ func NewBaseServant() *BaseServant {
 
 func NewDaoServant() *DaoServant {
 	ds := dao.DataService()
+	ts := dao.TweetSearchService()
+	redis := cache.NewRedisCache()
 	return &DaoServant{
 		BaseServant: NewBaseServant(),
-		Redis:       cache.NewRedisCache(),
+		Redis:       redis,
 		Dsa:         dao.WebDataServantA(),
 		Ds:          ds,
 		Views:       content.New(ds),
-		Ts:          dao.TweetSearchService(),
+		Ts:          ts,
+		index:       searchindex.New(ds, ts, redis),
 	}
 }
