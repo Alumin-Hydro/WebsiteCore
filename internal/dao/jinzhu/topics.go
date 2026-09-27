@@ -243,19 +243,7 @@ func (s *topicSrv) tagsFormatB(userTopicsMap map[int64]*topicInfo, tags cs.TagIn
 }
 
 func (s *topicSrv) TagsByKeyword(keyword string) (res cs.TagInfoList, err error) {
-	keyword = "%" + strings.Trim(keyword, " ") + "%"
-	tag := &dbr.Tag{}
-	var tags []*dbr.Tag
-	if keyword == "%%" {
-		tags, err = tag.List(s.db, &dbr.ConditionsT{
-			"ORDER": "quote_num DESC",
-		}, 0, 6)
-	} else {
-		tags, err = tag.List(s.db, &dbr.ConditionsT{
-			"tag LIKE ?": keyword,
-			"ORDER":      "quote_num DESC",
-		}, 0, 6)
-	}
+	tags, err := publicTagsByKeyword(s.db, strings.TrimSpace(keyword), 6)
 	if err == nil {
 		for _, tag := range tags {
 			res = append(res, &cs.TagInfo{
@@ -267,6 +255,23 @@ func (s *topicSrv) TagsByKeyword(keyword string) (res cs.TagInfoList, err error)
 		}
 	}
 	return
+}
+
+func publicTagsByKeyword(db *gorm.DB, keyword string, limit int) ([]*dbr.Tag, error) {
+	tagTable := db.NamingStrategy.TableName("Tag")
+	postTable := db.NamingStrategy.TableName("Post")
+	query := db.Model(&dbr.Tag{}).
+		Select(tagTable+".*, COUNT(DISTINCT "+postTable+".id) AS quote_num").
+		Joins("JOIN "+postTable+" ON "+tagTable+".tag = ANY(string_to_array("+postTable+".tags, ','))").
+		Where(tagTable+".is_del = ? AND "+postTable+".is_del = ? AND "+postTable+".audit_status = ? AND "+postTable+".visibility = ?", 0, 0, dbr.PostAuditApproved, dbr.PostVisitPublic).
+		Group(tagTable + ".id").
+		Order("quote_num DESC, " + tagTable + ".id DESC").
+		Limit(limit)
+	if keyword != "" {
+		query = query.Where(tagTable+".tag LIKE ?", "%"+keyword+"%")
+	}
+	var tags []*dbr.Tag
+	return tags, query.Find(&tags).Error
 }
 
 func (s *topicSrvA) UpsertTags(userId int64, tags []string) (_ cs.TagInfoList, err error) {
