@@ -241,7 +241,7 @@ func (s *coreSrv) UserPhoneBind(req *web.UserPhoneBindReq) error {
 }
 
 func (s *coreSrv) UserEmailBind(req *web.UserEmailBindReq) error {
-	if !_enableEmailVerify {
+	if !_enableEmailVerify || !conf.WebProfileSetting.AllowEmailBind {
 		return web.ErrEmailVerifyDisabled
 	}
 	email := strings.ToLower(strings.TrimSpace(req.Email))

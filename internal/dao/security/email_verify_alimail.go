@@ -58,7 +58,7 @@ func NewEmailVerifyService() *aliMailEmailServant {
 	}
 }
 
-func (s *aliMailEmailServant) SendEmailCaptcha(email, captcha string, expire time.Duration) error {
+func (s *aliMailEmailServant) SendEmailCaptcha(email, captcha string, expireMinutes int) error {
 	if s.baseURL == "" || s.clientID == "" || s.clientSecret == "" || s.senderEmail == "" {
 		return errors.New("AliMail email verification is not configured")
 	}
@@ -66,14 +66,14 @@ func (s *aliMailEmailServant) SendEmailCaptcha(email, captcha string, expire tim
 	if err != nil {
 		return err
 	}
-	bodyText := fmt.Sprintf("你的少年学院社区验证码是 %s，有效期 %d 分钟。请勿将验证码告诉他人。", captcha, int(expire))
+	bodyText := fmt.Sprintf("你的少年学院社区验证码是 %s，有效期 %d 分钟。请勿将验证码告诉他人。", captcha, expireMinutes)
 	payload := map[string]any{"message": map[string]any{
 		"subject":      "少年学院社区邮箱验证码",
 		"from":         map[string]string{"email": s.senderEmail, "name": s.senderName},
 		"toRecipients": []map[string]string{{"email": email}},
 		"body": map[string]string{
 			"bodyText": bodyText,
-			"bodyHtml": fmt.Sprintf("<p>你的少年学院社区验证码是：</p><p style=\"font-size:28px;font-weight:700;letter-spacing:4px\">%s</p><p>有效期 %d 分钟。请勿将验证码告诉他人。</p>", html.EscapeString(captcha), int(expire)),
+			"bodyHtml": fmt.Sprintf("<p>你的少年学院社区验证码是：</p><p style=\"font-size:28px;font-weight:700;letter-spacing:4px\">%s</p><p>有效期 %d 分钟。请勿将验证码告诉他人。</p>", html.EscapeString(captcha), expireMinutes),
 		},
 	}}
 	var draft aliMailDraft

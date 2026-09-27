@@ -24,7 +24,7 @@ type SecurityService interface {
 
 // EmailVerifyService sends one-time verification codes to an email address.
 type EmailVerifyService interface {
-	SendEmailCaptcha(email, captcha string, expire time.Duration) error
+	SendEmailCaptcha(email, captcha string, expireMinutes int) error
 }
 
 // AttachmentCheckService 附件检测服务

@@ -16,6 +16,7 @@ import (
 	"unicode/utf8"
 
 	api "github.com/BZYA-Community/WebsiteCore/auto/api/v1"
+	"github.com/BZYA-Community/WebsiteCore/internal/conf"
 	"github.com/BZYA-Community/WebsiteCore/internal/core/ms"
 	"github.com/BZYA-Community/WebsiteCore/internal/infra/avatar"
 	"github.com/BZYA-Community/WebsiteCore/internal/model/web"
@@ -51,7 +52,7 @@ func (s *pubSrv) SendCaptcha(req *web.SendCaptchaReq) error {
 	}
 	s.Redis.DelImgCaptcha(ctx, req.ImgCaptchaID)
 	if req.Email != "" {
-		if !_enableEmailVerify {
+		if !_enableEmailVerify || !conf.WebProfileSetting.AllowEmailBind {
 			return web.ErrEmailVerifyDisabled
 		}
 		address, err := mail.ParseAddress(strings.TrimSpace(req.Email))

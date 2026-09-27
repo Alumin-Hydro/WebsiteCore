@@ -7,7 +7,7 @@
     "nicknamePlaceholder": "请输入昵称",
     "username": "用户名"
   },
-  "phone": {
+  "email": {
     "title": "邮箱验证",
     "rebind": "更换邮箱",
     "alertTitle": "邮箱验证提示",
@@ -17,8 +17,8 @@
     "placeholder": "请输入你的常用邮箱",
     "imgCaptchaLabel": "图形验证码",
     "imgCaptchaPlaceholder": "请输入图形验证码后获取验证码",
-    "smsLabel": "邮件验证码",
-    "smsPlaceholder": "请输入邮件中的 6 位验证码",
+    "codeLabel": "邮件验证码",
+    "codePlaceholder": "请输入邮件中的 6 位验证码",
     "resend": "{seconds}s后重新发送",
     "send": "发送验证码",
     "bind": "绑定",
@@ -64,8 +64,8 @@
     "submitted": "昵称修改已提交"
   },
   "rule": {
-    "phoneRequired": "请输入有效的邮箱地址",
-    "smsRequired": "请输入邮件验证码",
+    "emailRequired": "请输入有效的邮箱地址",
+    "emailCodeRequired": "请输入邮件验证码",
     "activationRequired": "请输入激活码",
     "newPasswordRequired": "请输入新密码",
     "oldPasswordRequired": "请输入旧密码",

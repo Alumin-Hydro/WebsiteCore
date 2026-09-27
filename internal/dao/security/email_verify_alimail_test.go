@@ -11,7 +11,6 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
-	"time"
 )
 
 func TestAliMailSendEmailCaptchaCreatesAndSendsDraft(t *testing.T) {
@@ -52,7 +51,7 @@ func TestAliMailSendEmailCaptchaCreatesAndSendsDraft(t *testing.T) {
 		senderEmail: "aiyouth@bza.edu.cn", senderName: "少年学院", client: server.Client(),
 	}
 	for i := 0; i < 2; i++ {
-		if err := service.SendEmailCaptcha("student@example.com", "123456", 5*time.Nanosecond); err != nil {
+		if err := service.SendEmailCaptcha("student@example.com", "123456", 5); err != nil {
 			t.Fatalf("SendEmailCaptcha() error = %v", err)
 		}
 	}

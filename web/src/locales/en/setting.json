@@ -7,7 +7,7 @@
     "nicknamePlaceholder": "Enter nickname",
     "username": "Username"
   },
-  "phone": {
+  "email": {
     "title": "Email Verification",
     "rebind": "Change Email",
     "alertTitle": "Verify Your Email",
@@ -17,8 +17,8 @@
     "placeholder": "Enter your email address",
     "imgCaptchaLabel": "Image Captcha",
     "imgCaptchaPlaceholder": "Enter image captcha to get an email code",
-    "smsLabel": "Email Code",
-    "smsPlaceholder": "Enter the 6-digit code from the email",
+    "codeLabel": "Email Code",
+    "codePlaceholder": "Enter the 6-digit code from the email",
     "resend": "Resend in {seconds}s",
     "send": "Send Code",
     "bind": "Bind",
@@ -64,8 +64,8 @@
     "submitted": "Nickname change submitted"
   },
   "rule": {
-    "phoneRequired": "Please enter a valid email address",
-    "smsRequired": "Please enter the email code",
+    "emailRequired": "Please enter a valid email address",
+    "emailCodeRequired": "Please enter the email code",
     "activationRequired": "Please enter activation code",
     "newPasswordRequired": "Please enter new password",
     "oldPasswordRequired": "Please enter old password",
