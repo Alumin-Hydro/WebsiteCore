@@ -47,7 +47,7 @@ func TestJSONRoutingAndCORS(t *testing.T) {
 	}
 }
 
-func TestObjectStorageKeepsDefaultRouting(t *testing.T) {
+func TestDefaultEngineRouting(t *testing.T) {
 	e := newHTTPEngine(httpEngineOptions{})
 	e.GET("/object", func(c *gin.Context) { c.String(200, "object") })
 	rec := httptest.NewRecorder()

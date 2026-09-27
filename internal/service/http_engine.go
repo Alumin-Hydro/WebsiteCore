@@ -9,8 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// httpEngineOptions describes the two existing HTTP policies. Object storage
-// uses Gin's defaults; JSON endpoints also use CORS and JSON routing errors.
+// httpEngineOptions selects Gin defaults or the JSON endpoint policy with
+// CORS and JSON routing errors, plus optional Sentry reporting.
 type httpEngineOptions struct {
 	API    bool
 	Sentry bool
