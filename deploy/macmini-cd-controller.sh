@@ -20,8 +20,12 @@ checkout_main() {
   local sha="$1"
   mkdir -p "$(dirname "$SOURCE_DIR")"
   if [[ ! -d "$SOURCE_DIR/.git" ]]; then
-    rm -rf "$SOURCE_DIR"
-    git clone --filter=blob:none --depth=1 --branch main "$REPOSITORY_URL" "$SOURCE_DIR"
+    mkdir -p "$SOURCE_DIR"
+    git -C "$SOURCE_DIR" init -b main >/dev/null
+    git -C "$SOURCE_DIR" remote add origin "$REPOSITORY_URL"
+    git -C "$SOURCE_DIR" fetch --depth=1 origin main
+    git -C "$SOURCE_DIR" reset --hard FETCH_HEAD
+    git -C "$SOURCE_DIR" clean -fdx
   else
     git -C "$SOURCE_DIR" fetch --depth=1 origin main
     git -C "$SOURCE_DIR" reset --hard FETCH_HEAD
