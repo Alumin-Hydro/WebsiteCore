@@ -53,6 +53,7 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/resty.v1 v1.12.0
 	gorm.io/driver/postgres v1.6.0
+	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.30.0
 	gorm.io/plugin/dbresolver v1.6.0
 	gorm.io/plugin/soft_delete v1.2.1
@@ -150,5 +151,4 @@ require (
 	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.6.0 // indirect
-	gorm.io/driver/sqlite v1.6.0 // indirect
 )
