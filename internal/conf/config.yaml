@@ -78,6 +78,7 @@ AliMail:
   ClientSecret: ""
   SenderEmail: aiyouth@bza.edu.cn
   SenderName: 少年学院
+  AllowedRecipientDomains: ["bza.edu.cn"] # 按需增加学校认可的邮箱域，阻止临时邮箱滥用
 Alipay: 
   AppID: "paopao-ce-app-id"
   InProduction: True

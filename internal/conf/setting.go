@@ -149,11 +149,12 @@ type smsJuheConf struct {
 }
 
 type aliMailConf struct {
-	BaseURL      string
-	ClientID     string
-	ClientSecret string
-	SenderEmail  string
-	SenderName   string
+	BaseURL                string
+	ClientID               string
+	ClientSecret           string
+	SenderEmail            string
+	SenderName             string
+	AllowedRecipientDomains []string
 }
 
 type tweetSearchConf struct {

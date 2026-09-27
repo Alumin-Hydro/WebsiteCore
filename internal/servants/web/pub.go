@@ -60,6 +60,9 @@ func (s *pubSrv) SendCaptcha(req *web.SendCaptchaReq) error {
 			return web.ErrGetEmailCaptchaError
 		}
 		email := strings.ToLower(address.Address)
+		if conf.AliMailSetting == nil || !isAllowedEmailDomain(email, conf.AliMailSetting.AllowedRecipientDomains) {
+			return web.ErrGetEmailCaptchaError
+		}
 		if count, _ := s.Redis.GetCountEmailCaptcha(ctx, email); count >= _MaxEmailCaptcha {
 			return web.ErrTooManyEmailCaptchaSend
 		}
@@ -88,6 +91,21 @@ func (s *pubSrv) SendCaptcha(req *web.SendCaptchaReq) error {
 	s.Redis.IncrCountSmsCaptcha(ctx, req.Phone)
 
 	return nil
+}
+
+func isAllowedEmailDomain(email string, allowedDomains []string) bool {
+	parts := strings.Split(email, "@")
+	if len(parts) != 2 || len(allowedDomains) == 0 {
+		return false
+	}
+	domain := strings.ToLower(strings.TrimSuffix(strings.TrimSpace(parts[1]), "."))
+	for _, allowed := range allowedDomains {
+		allowed = strings.ToLower(strings.TrimSuffix(strings.TrimSpace(allowed), "."))
+		if allowed != "" && (domain == allowed || strings.HasSuffix(domain, "."+allowed)) {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *pubSrv) GetCaptcha() (*web.GetCaptchaResp, error) {

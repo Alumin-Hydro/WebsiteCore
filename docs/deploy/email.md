@@ -1,6 +1,6 @@
 # Email verification with Alibaba Mail
 
-WebsiteCore can verify an account by sending a one-time code from the school mailbox. Existing phone-bound accounts remain active during migration, while new users can verify an email address instead of providing a phone number.
+WebsiteCore can verify an account by sending a one-time code from the school mailbox. Email is an optional alternative verified contact method, not a mandatory identifier for every account. Existing phone-bound accounts remain active during migration, while new users can verify an approved email address instead of providing a phone number.
 
 ## Alibaba Mail preparation
 
@@ -28,6 +28,7 @@ AliMail:
   ClientSecret: "<application client_secret>"
   SenderEmail: aiyouth@bza.edu.cn
   SenderName: 少年学院
+  AllowedRecipientDomains: ["bza.edu.cn"]
 
 WebProfile:
   AllowEmailBind: true
@@ -35,10 +36,13 @@ WebProfile:
 
 Never commit `ClientSecret`. Supply production credentials through the deployment's protected configuration or secret-management mechanism.
 
+`AllowedRecipientDomains` is required when email binding is enabled and fails closed when empty. It accepts exact domains and their subdomains. Add only domains approved by the school; this prevents disposable mailbox services from being used for account verification. If the community later accepts another institutional mail provider, add that domain explicitly after review.
+
 ## Security behavior
 
 - A graphical captcha is required before sending mail.
 - Each email address can request at most 10 codes per day.
+- Only configured institutional email domains are accepted; an empty allowlist rejects all recipients.
 - Codes are six digits, generated with `crypto/rand`, and expire after five minutes.
 - Incorrect attempts are counted atomically; a successful code is immediately exhausted.
 - The OAuth access token is cached until shortly before expiry.
