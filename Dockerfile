@@ -30,5 +30,5 @@ COPY --from=backend /paopao /app/paopao
 RUN mkdir -p /app/custom/data
 EXPOSE 8008
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=12 \
-  CMD wget -q -O - 'http://127.0.0.1:8008/v1/posts?page=1&page_size=1' | /bin/busybox grep -Eq '"code"[[:space:]]*:[[:space:]]*0([^0-9]|$)' || exit 1
+  CMD wget -q -O - 'http://127.0.0.1:8008/v1/posts?style=newest' | /bin/busybox grep -Eq '"code"[[:space:]]*:[[:space:]]*0([^0-9]|$)' || exit 1
 CMD ["/app/paopao", "serve"]
