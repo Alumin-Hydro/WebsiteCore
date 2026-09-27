@@ -105,12 +105,12 @@ func (s *topicSrv) GetNewestTags(userId int64, limit int, offset int) (cs.TagLis
 
 // listPublicTags returns only topics referenced by posts that a guest can read.
 // The persisted quote_num includes pending and non-public posts, so it cannot be
-// used for public discovery or ranking.
+// used for public discovery or ranking. This exact scan is suitable for the
+// current community size; at larger scale, replace it with a public-only
+// materialized counter or cache that is updated on audit/visibility changes.
 func (s *topicSrv) listPublicTags(typ cs.TagType, limit int, offset int) (cs.TagList, error) {
-	var encodedTags []string
-	if err := s.db.Model(&dbr.Post{}).
-		Where("is_del = ? AND audit_status = ? AND visibility = ?", 0, dbr.PostAuditApproved, dbr.PostVisitPublic).
-		Pluck("tags", &encodedTags).Error; err != nil {
+	encodedTags, err := listPublicPostTagFields(s.db)
+	if err != nil {
 		return nil, err
 	}
 
@@ -149,6 +149,14 @@ func (s *topicSrv) listPublicTags(typ cs.TagType, limit int, offset int) (cs.Tag
 		tags = tags[:limit]
 	}
 	return s.formatTags(tags)
+}
+
+func listPublicPostTagFields(db *gorm.DB) ([]string, error) {
+	var encodedTags []string
+	err := db.Model(&dbr.Post{}).
+		Where("is_del = ? AND audit_status = ? AND visibility = ?", 0, dbr.PostAuditApproved, dbr.PostVisitPublic).
+		Pluck("tags", &encodedTags).Error
+	return encodedTags, err
 }
 
 func countPublicTagRefs(encodedTags []string) map[string]int64 {
