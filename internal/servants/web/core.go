@@ -5,6 +5,7 @@
 package web
 
 import (
+	"errors"
 	"fmt"
 	"unicode/utf8"
 
@@ -207,6 +208,9 @@ func (s *coreSrv) UserPhoneBind(req *web.UserPhoneBindReq) error {
 	if _enablePhoneVerify {
 		verified, err := s.Ds.VerifyPhoneCaptcha(req.Phone, req.Captcha, _maxCaptchaTimes)
 		if err != nil {
+			if errors.Is(err, core.ErrPhoneCaptchaMaxAttempts) {
+				return web.ErrMaxPhoneCaptchaUseTimes
+			}
 			logrus.Errorf("Ds.VerifyPhoneCaptcha err: %s", err)
 			return web.ErrErrorPhoneCaptcha
 		}

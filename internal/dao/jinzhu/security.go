@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/BZYA-Community/WebsiteCore/internal/core"
-	"github.com/BZYA-Community/WebsiteCore/internal/core/ms"
 	"github.com/BZYA-Community/WebsiteCore/internal/dao/jinzhu/dbr"
 	"gorm.io/gorm"
 )
@@ -39,14 +38,34 @@ func (s *securitySrv) VerifyPhoneCaptcha(phone, captcha string, maxAttempts int)
 	if err != nil {
 		return false, err
 	}
+	if current.UseTimes >= maxAttempts {
+		return false, core.ErrPhoneCaptchaMaxAttempts
+	}
 	base := s.db.Model(&dbr.Captcha{}).
 		Where("id = ? AND is_del = 0 AND expired_on >= ? AND use_times < ?", current.ID, time.Now().Unix(), maxAttempts)
 	if current.Captcha == captcha {
 		result := base.Where("captcha = ?", captcha).Update("use_times", maxAttempts)
-		return result.RowsAffected == 1, result.Error
+		if result.Error != nil || result.RowsAffected == 1 {
+			return result.RowsAffected == 1, result.Error
+		}
+		return false, s.captchaLimitError(current.ID, maxAttempts)
 	}
 	result := base.UpdateColumn("use_times", gorm.Expr("use_times + 1"))
-	return false, result.Error
+	if result.Error != nil || result.RowsAffected == 1 {
+		return false, result.Error
+	}
+	return false, s.captchaLimitError(current.ID, maxAttempts)
+}
+
+func (s *securitySrv) captchaLimitError(id int64, maxAttempts int) error {
+	var latest dbr.Captcha
+	if err := s.db.Where("id = ? AND is_del = 0", id).First(&latest).Error; err != nil {
+		return err
+	}
+	if latest.UseTimes >= maxAttempts {
+		return core.ErrPhoneCaptchaMaxAttempts
+	}
+	return nil
 }
 
 func generatePhoneCaptcha() (string, error) {

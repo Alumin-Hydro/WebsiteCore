@@ -4,7 +4,12 @@
 
 package core
 
-import "time"
+import (
+	"errors"
+	"time"
+)
+
+var ErrPhoneCaptchaMaxAttempts = errors.New("phone captcha reached maximum attempts")
 
 // SecurityService 安全相关服务
 type SecurityService interface {

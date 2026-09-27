@@ -3,11 +3,13 @@ package jinzhu
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"os"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/BZYA-Community/WebsiteCore/internal/core"
 	"github.com/BZYA-Community/WebsiteCore/internal/dao/jinzhu/dbr"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -64,7 +66,7 @@ func TestVerifyPhoneCaptchaConsumesAttemptsAndSuccess(t *testing.T) {
 	if ok, err := srv.VerifyPhoneCaptcha(record.Phone, record.Captcha, 3); err != nil || !ok {
 		t.Fatalf("correct code = (%v, %v), want (true, nil)", ok, err)
 	}
-	if ok, err := srv.VerifyPhoneCaptcha(record.Phone, record.Captcha, 3); err != nil || ok {
-		t.Fatalf("reused code = (%v, %v), want (false, nil)", ok, err)
+	if ok, err := srv.VerifyPhoneCaptcha(record.Phone, record.Captcha, 3); !errors.Is(err, core.ErrPhoneCaptchaMaxAttempts) || ok {
+		t.Fatalf("reused code = (%v, %v), want (false, max-attempts)", ok, err)
 	}
 }
