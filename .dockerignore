@@ -1,0 +1,27 @@
+# Never send repository metadata or host-only deployment files to Docker.
+.git
+.git/**
+
+# Root runtime config is private. Keep internal/conf/config.yaml: it is the
+# embedded application default required by go:embed.
+/config.yaml
+custom/
+custom/**
+runtime/
+runtime/**
+
+# Dependencies and local/private credentials.
+node_modules/
+**/node_modules/
+.env
+.env.*
+**/.env
+**/.env.*
+*.pem
+*.key
+*.secret
+*.secrets
+private/
+private/**
+**/private/
+**/private/**

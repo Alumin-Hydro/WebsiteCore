@@ -84,6 +84,14 @@ jobs:
   # Claude must run after both deterministic CI jobs finish. always() keeps
   # the review alive when build/test/lint fails, so Claude can explain the
   # failure instead of silently skipping the review.
+  deploy-config:
+    name: Validate deployment scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check shell syntax
+        run: bash -n deploy/macmini-deploy.sh deploy/macmini-cd-controller.sh
+
   review:
     name: review
     needs: [backend, frontend]
