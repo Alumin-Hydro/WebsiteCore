@@ -150,7 +150,7 @@ type smsJuheConf struct {
 
 type aliMailConf struct {
 	BaseURL, ClientID, ClientSecret, SenderEmail, SenderName string
-	AllowedRecipientDomains []string
+	AllowedRecipientDomains                                  []string
 }
 
 type tweetSearchConf struct {

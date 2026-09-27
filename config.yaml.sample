@@ -22,6 +22,7 @@ AliMail:
   ClientSecret: ""
   SenderEmail: aiyouth@bza.edu.cn
   SenderName: 少年学院
+  AllowedRecipientDomains: ["bza.edu.cn"] # add other trusted school domains when required
 
 WebServer:
   HttpIp: 0.0.0.0

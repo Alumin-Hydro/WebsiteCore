@@ -245,6 +245,9 @@ func (s *coreSrv) UserEmailBind(req *web.UserEmailBindReq) error {
 		return web.ErrEmailVerifyDisabled
 	}
 	email := strings.ToLower(strings.TrimSpace(req.Email))
+	if conf.AliMailSetting == nil || !isAllowedEmailDomain(email, conf.AliMailSetting.AllowedRecipientDomains) {
+		return web.ErrEmailDomainNotAllowed
+	}
 	u, err := s.Ds.GetUserByEmail(email)
 	if err == nil && u.Model != nil && u.ID != 0 && u.ID != req.User.ID {
 		return web.ErrExistedUserEmail

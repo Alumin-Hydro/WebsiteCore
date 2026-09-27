@@ -35,6 +35,7 @@ var (
 	ErrErrorEmailCaptcha       = xerror.NewError(20033, "邮件验证码不正确或已过期")
 	ErrMaxEmailCaptchaUseTimes = xerror.NewError(20034, "邮件验证码已达最大尝试次数")
 	ErrEmailVerifyDisabled     = xerror.NewError(20035, "邮件验证服务尚未启用")
+	ErrEmailDomainNotAllowed   = xerror.NewError(20036, "该邮箱域名不在允许范围内")
 	ErrNicknameLengthLimit     = xerror.NewError(20020, "昵称长度2~12")
 	ErrNoExistUsername         = xerror.NewError(20021, "用户不存在")
 	ErrNoAdminPermission       = xerror.NewError(20022, "无管理权限")
