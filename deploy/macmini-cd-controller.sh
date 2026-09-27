@@ -33,6 +33,10 @@ checkout_main() {
 deploy_once() {
   local sha="$1"
   checkout_main "$sha"
+  if [[ ! -f "$SOURCE_DIR/Dockerfile" || ! -f "$SOURCE_DIR/deploy/macmini-deploy.sh" ]]; then
+    log "main $sha has no deploy contract yet; waiting for the CD merge"
+    return 2
+  fi
   MACMINI_DEPLOY_ROOT="$HOST_ROOT" \
   RUNTIME_DIR="$RUNTIME_DIR" \
   GITHUB_WORKSPACE="$SOURCE_DIR" \
@@ -51,7 +55,8 @@ while :; do
       if deploy_once "$sha"; then
         log "main commit $sha deployed"
       else
-        log "deployment failed for $sha; will retry on the next poll" >&2
+        rc=$?
+        [[ "$rc" == 2 ]] || log "deployment failed for $sha; will retry on the next poll" >&2
       fi
     fi
   else
