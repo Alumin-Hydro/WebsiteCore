@@ -114,21 +114,7 @@ func (s *topicSrv) listPublicTags(typ cs.TagType, limit int, offset int) (cs.Tag
 		return nil, err
 	}
 
-	counts := make(map[string]int64)
-	for _, encoded := range encodedTags {
-		seen := make(map[string]struct{})
-		for _, rawTag := range strings.Split(encoded, ",") {
-			tag := strings.TrimSpace(rawTag)
-			if tag == "" {
-				continue
-			}
-			if _, exists := seen[tag]; exists {
-				continue
-			}
-			seen[tag] = struct{}{}
-			counts[tag]++
-		}
-	}
+	counts := countPublicTagRefs(encodedTags)
 	if len(counts) == 0 {
 		return cs.TagList{}, nil
 	}
@@ -163,6 +149,25 @@ func (s *topicSrv) listPublicTags(typ cs.TagType, limit int, offset int) (cs.Tag
 		tags = tags[:limit]
 	}
 	return s.formatTags(tags)
+}
+
+func countPublicTagRefs(encodedTags []string) map[string]int64 {
+	counts := make(map[string]int64)
+	for _, encoded := range encodedTags {
+		seen := make(map[string]struct{})
+		for _, rawTag := range strings.Split(encoded, ",") {
+			tag := strings.TrimSpace(rawTag)
+			if tag == "" {
+				continue
+			}
+			if _, exists := seen[tag]; exists {
+				continue
+			}
+			seen[tag] = struct{}{}
+			counts[tag]++
+		}
+	}
+	return counts
 }
 
 func (s *topicSrv) GetFollowTags(userId int64, isPin bool, limit int, offset int) (cs.TagList, error) {
