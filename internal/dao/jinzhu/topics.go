@@ -261,7 +261,7 @@ func publicTagsByKeyword(db *gorm.DB, keyword string, limit int) ([]*dbr.Tag, er
 	tagTable := db.NamingStrategy.TableName("Tag")
 	postTable := db.NamingStrategy.TableName("Post")
 	query := db.Model(&dbr.Tag{}).
-		Select(tagTable+".*, COUNT(DISTINCT "+postTable+".id) AS quote_num").
+		Select(tagTable+".id, "+tagTable+".created_on, "+tagTable+".modified_on, "+tagTable+".deleted_on, "+tagTable+".is_del, "+tagTable+".user_id, "+tagTable+".tag, COUNT(DISTINCT "+postTable+".id) AS quote_num").
 		Joins("JOIN "+postTable+" ON "+tagTable+".tag = ANY(string_to_array("+postTable+".tags, ','))").
 		Where(tagTable+".is_del = ? AND "+postTable+".is_del = ? AND "+postTable+".audit_status = ? AND "+postTable+".visibility = ?", 0, 0, dbr.PostAuditApproved, dbr.PostVisitPublic).
 		Group(tagTable + ".id").
