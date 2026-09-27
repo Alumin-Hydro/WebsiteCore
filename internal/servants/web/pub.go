@@ -10,7 +10,9 @@ import (
 	"encoding/base64"
 	"image/color"
 	"image/png"
+	"net/mail"
 	"regexp"
+	"strings"
 	"unicode/utf8"
 
 	api "github.com/BZYA-Community/WebsiteCore/auto/api/v1"
@@ -31,6 +33,7 @@ import (
 const (
 	_MaxLoginErrTimes = 10
 	_MaxPhoneCaptcha  = 10
+	_MaxEmailCaptcha  = 10
 )
 
 type pubSrv struct {
@@ -47,6 +50,30 @@ func (s *pubSrv) SendCaptcha(req *web.SendCaptchaReq) error {
 		return web.ErrErrorCaptchaPassword
 	}
 	s.Redis.DelImgCaptcha(ctx, req.ImgCaptchaID)
+	if req.Email != "" {
+		if !_enableEmailVerify {
+			return web.ErrEmailVerifyDisabled
+		}
+		address, err := mail.ParseAddress(strings.TrimSpace(req.Email))
+		if err != nil || !strings.EqualFold(address.Address, strings.TrimSpace(req.Email)) {
+			return web.ErrGetEmailCaptchaError
+		}
+		email := strings.ToLower(address.Address)
+		if count, _ := s.Redis.GetCountEmailCaptcha(ctx, email); count >= _MaxEmailCaptcha {
+			return web.ErrTooManyEmailCaptchaSend
+		}
+		if err := s.Ds.SendEmailCaptcha(email); err != nil {
+			logrus.Errorf("send email captcha failed: %v", err)
+			return web.ErrGetEmailCaptchaError
+		}
+		if err := s.Redis.IncrCountEmailCaptcha(ctx, email); err != nil {
+			logrus.Errorf("count email captcha failed: %v", err)
+		}
+		return nil
+	}
+	if req.Phone == "" {
+		return web.ErrGetPhoneCaptchaError
+	}
 
 	// 今日频次限制
 	if count, _ := s.Redis.GetCountSmsCaptcha(ctx, req.Phone); count >= _MaxPhoneCaptcha {

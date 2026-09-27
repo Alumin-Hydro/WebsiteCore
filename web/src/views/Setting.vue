@@ -9,10 +9,10 @@
                     :src="userInfo.avatar"
                 />
                 <n-upload
-                    v-if="!profile.allowPhoneBind || (
-                        profile.allowPhoneBind &&
-                        userInfo.phone &&
-                        userInfo.phone.length > 0)
+                    v-if="!profile.allowEmailBind || (
+                        profile.allowEmailBind &&
+                        userInfo.email &&
+                        userInfo.email.length > 0)
                     "
                     ref="avatarRef"
                     :show-file-list="false"
@@ -48,10 +48,10 @@
                     round
                     type="success"
                     size="small"
-                    v-if="!showNicknameEdit && (!profile.allowPhoneBind || (
-                        profile.allowPhoneBind &&
-                        userInfo.phone &&
-                        userInfo.phone.length > 0 &&
+                    v-if="!showNicknameEdit && (!profile.allowEmailBind || (
+                        profile.allowEmailBind &&
+                        userInfo.email &&
+                        userInfo.email.length > 0 &&
                         userInfo.status == 1)
                     )
                     "
@@ -71,14 +71,14 @@
             </div>
         </n-card>
 
-        <n-card v-if="profile.allowPhoneBind" :title="t('setting.phone.title')" size="small" class="setting-card">
+        <n-card v-if="profile.allowEmailBind" :title="t('setting.phone.title')" size="small" class="setting-card">
             <div
                 v-if="
-                    userInfo.phone &&
-                    userInfo.phone.length > 0
+                    userInfo.email &&
+                    userInfo.email.length > 0
                 "
             >
-                {{ userInfo.phone }}
+                {{ userInfo.email }}
 
                 <n-button
                     quaternary
@@ -109,10 +109,10 @@
                     :model="modelData"
                     :rules="bindRules"
                 >
-                    <n-form-item path="phone" :label="t('setting.phone.label')">
+                    <n-form-item path="email" :label="t('setting.phone.label')">
                         <n-input
-                            :value="modelData.phone"
-                            @update:value="(v: string) => (modelData.phone = v.trim())"
+                            :value="modelData.email"
+                            @update:value="(v: string) => (modelData.email = v.trim())"
                             :placeholder="t('setting.phone.placeholder')"
                             @keydown.enter.prevent
                         />
@@ -132,10 +132,10 @@
                             </div>
                         </div>
                     </n-form-item>
-                    <n-form-item path="phone_captcha" :label="t('setting.phone.smsLabel')">
+                    <n-form-item path="email_captcha" :label="t('setting.phone.smsLabel')">
                         <n-input-group>
                             <n-input
-                                v-model:value="modelData.phone_captcha"
+                                v-model:value="modelData.email_captcha"
                                 :placeholder="t('setting.phone.smsPlaceholder')"
                             />
                             <n-button
@@ -143,7 +143,7 @@
                                 ghost
                                 :disabled="smsDisabled"
                                 :loading="sending"
-                                @click="sendPhoneCaptcha"
+                                @click="sendEmailCaptcha"
                             >
                                 {{
                                     smsCounter > 0 && smsDisabled
@@ -388,8 +388,8 @@ const modelData = reactive({
   id: '',
   b64s: '',
   imgCaptcha: '',
-  phone: '',
-  phone_captcha: '',
+  email: '',
+  email_captcha: '',
   password: '',
   old_password: '',
   reenteredPassword: '',
@@ -521,9 +521,9 @@ const handlePhoneBind = (e: MouseEvent) => {
   phoneFormRef.value?.validate((errors) => {
     if (!errors) {
       binding.value = true;
-      Api.v1.user.post.phone({
-        phone: modelData.phone,
-        captcha: modelData.phone_captcha,
+      Api.v1.user.post.email({
+        email: modelData.email,
+        captcha: modelData.email_captcha,
       })
         .then((res) => {
           binding.value = false;
@@ -532,14 +532,14 @@ const handlePhoneBind = (e: MouseEvent) => {
 
           storeUser.updateUserinfo({
             ...userInfo.value,
-            phone: modelData.phone,
+            email: modelData.email,
           });
 
           modelData.id = '';
           modelData.b64s = '';
           modelData.imgCaptcha = '';
-          modelData.phone = '';
-          modelData.phone_captcha = '';
+          modelData.email = '';
+          modelData.email_captcha = '';
         })
         .catch((err) => {
           binding.value = false;
@@ -636,7 +636,7 @@ const handleNicknameChange = () => {
     });
 };
 
-const sendPhoneCaptcha = () => {
+const sendEmailCaptcha = () => {
   if (smsCounter.value > 0 && smsDisabled.value) {
     return;
   }
@@ -646,7 +646,7 @@ const sendPhoneCaptcha = () => {
   }
   sending.value = true;
   Api.v1.captcha.post._self({
-    phone: modelData.phone,
+    email: modelData.email,
     img_captcha: modelData.imgCaptcha,
     img_captcha_id: modelData.id,
   })
@@ -674,17 +674,17 @@ const sendPhoneCaptcha = () => {
 };
 
 const bindRules = computed(() => ({
-  phone: [
+  email: [
     {
       required: true,
       message: t('setting.rule.phoneRequired'),
       trigger: ['input'],
       validator: (rule: FormItemRule, value: any) => {
-        return /^[1]+[3-9]{1}\d{9}$/.test(value);
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
       },
     },
   ],
-  phone_captcha: [
+  email_captcha: [
     {
       required: true,
       message: t('setting.rule.smsRequired'),
