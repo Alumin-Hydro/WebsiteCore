@@ -81,13 +81,14 @@ jobs:
       - name: Syntax check (build)
         run: npm run build
 
-  # Claude must run after both deterministic CI jobs finish. always() keeps
-  # the review alive when build/test/lint fails, so Claude can explain the
-  # failure instead of silently skipping the review.
+  # Claude uses repository secrets and writes review comments. Fork-originated
+  # PRs cannot receive those upstream permissions, so skip review there rather
+  # than presenting a misleading failure. Same-repository PRs still run review
+  # after both deterministic CI jobs, including when one of them fails.
   review:
     name: review
     needs: [backend, frontend]
-    if: ${{ always() && github.event_name == 'pull_request' && needs.backend.result != 'cancelled' && needs.frontend.result != 'cancelled' }}
+    if: ${{ always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.backend.result != 'cancelled' && needs.frontend.result != 'cancelled' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
