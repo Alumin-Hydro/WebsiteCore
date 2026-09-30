@@ -32,13 +32,6 @@
 
 <br>
 
-# 我们欢迎贡献，但贡献不能以持续增加其他维护者负担为代价。
-# We welcome contributions, but they shouldn’t come at the cost of continuously adding more burden to other maintainers.
-# 我们欢迎贡献，但贡献不能以持续增加其他维护者负担为代价。
-# We welcome contributions, but they shouldn’t come at the cost of continuously adding more burden to other maintainers.
-# 我们欢迎贡献，但贡献不能以持续增加其他维护者负担为代价。
-# We welcome contributions, but they shouldn’t come at the cost of continuously adding more burden to other maintainers.
-
 English | [简体中文](README_ZH.md)
 
 ## About
