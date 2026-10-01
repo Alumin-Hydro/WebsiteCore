@@ -174,13 +174,15 @@ type CourseUploadCredentialReq struct {
 
 type CourseUploadCredentialResp struct {
 	Mode string `json:"mode"` // direct=浏览器直传OSS / proxy=后端中转上传
-	// 以下仅 direct 模式返回
-	Host        string `json:"host,omitempty"`
-	AccessKeyID string `json:"access_key_id,omitempty"`
-	Policy      string `json:"policy,omitempty"`
-	Signature   string `json:"signature,omitempty"`
-	Key         string `json:"key,omitempty"`
-	Expire      int64  `json:"expire,omitempty"`
+	// 以下仅 direct 模式返回, 对应 PostObject V4 表单字段
+	Host             string `json:"host,omitempty"`
+	Policy           string `json:"policy,omitempty"`
+	SignatureVersion string `json:"signature_version,omitempty"` // x-oss-signature-version
+	Credential       string `json:"credential,omitempty"`        // x-oss-credential
+	Date             string `json:"date,omitempty"`              // x-oss-date
+	Signature        string `json:"signature,omitempty"`         // x-oss-signature
+	Key              string `json:"key,omitempty"`
+	Expire           int64  `json:"expire,omitempty"`
 }
 
 // UploadCourseVideoReq 代理模式视频上传(multipart)

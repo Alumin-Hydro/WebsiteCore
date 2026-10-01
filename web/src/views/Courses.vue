@@ -548,8 +548,10 @@ const uploadVideo = async (file: File, ext: string) => {
       const form = new FormData();
       form.append('key', cred.key);
       form.append('policy', cred.policy!);
-      form.append('OSSAccessKeyId', cred.access_key_id!);
-      form.append('Signature', cred.signature!);
+      form.append('x-oss-signature-version', cred.signature_version!);
+      form.append('x-oss-credential', cred.credential!);
+      form.append('x-oss-date', cred.date!);
+      form.append('x-oss-signature', cred.signature!);
       form.append('success_action_status', '200');
       form.append('file', file);
       await axios.post(cred.host, form, {
