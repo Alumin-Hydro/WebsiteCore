@@ -70,6 +70,7 @@ type confObjectStorageSnapshot struct {
 
 type confAliOSSSnapshot struct {
 	Endpoint        string
+	Region          string
 	AccessKeyID     string
 	AccessKeySecret string
 	Bucket          string
@@ -165,7 +166,7 @@ func ensureBootstrapSnapshot() {
 		bootstrapConfig.ObjectStorage = confObjectStorageSnapshot{RetainInDays: conf.ObjectStorage.RetainInDays, TempDir: conf.ObjectStorage.TempDir}
 	}
 	if conf.AliOSSSetting != nil {
-		bootstrapConfig.AliOSS = confAliOSSSnapshot{Endpoint: conf.AliOSSSetting.Endpoint, AccessKeyID: conf.AliOSSSetting.AccessKeyID, AccessKeySecret: conf.AliOSSSetting.AccessKeySecret, Bucket: conf.AliOSSSetting.Bucket, Domain: conf.AliOSSSetting.Domain}
+		bootstrapConfig.AliOSS = confAliOSSSnapshot{Endpoint: conf.AliOSSSetting.Endpoint, Region: conf.AliOSSSetting.Region, AccessKeyID: conf.AliOSSSetting.AccessKeyID, AccessKeySecret: conf.AliOSSSetting.AccessKeySecret, Bucket: conf.AliOSSSetting.Bucket, Domain: conf.AliOSSSetting.Domain}
 	}
 	if conf.LocalOSSSetting != nil {
 		bootstrapConfig.LocalOSS = confLocalOSSSnapshot{SavePath: conf.LocalOSSSetting.SavePath, Secure: conf.LocalOSSSetting.Secure, Bucket: conf.LocalOSSSetting.Bucket, Domain: conf.LocalOSSSetting.Domain}
@@ -250,6 +251,7 @@ func Registry() []Definition {
 		stringDefWithActive("local_oss.domain", "storage", "local_oss", "Local OSS domain", "Public domain for local object storage.", ApplyModeRestartRequired, false, true, nil, func() bool { return cfg.If("LocalOSS") }, func() any { return conf.LocalOSSSetting.Domain }, func() any { return bootstrapConfig.LocalOSS.Domain }, validateTrimmedMax("local_oss.domain", 255), func(v any) { conf.LocalOSSSetting.Domain = v.(string) }),
 
 		stringDefWithActive("alioss.endpoint", "storage", "alioss", "AliOSS endpoint", "AliOSS endpoint.", ApplyModeRestartRequired, false, true, nil, func() bool { return cfg.If("AliOSS") }, func() any { return conf.AliOSSSetting.Endpoint }, func() any { return bootstrapConfig.AliOSS.Endpoint }, validateTrimmedMax("alioss.endpoint", 255), func(v any) { conf.AliOSSSetting.Endpoint = v.(string) }),
+		stringDefWithActive("alioss.region", "storage", "alioss", "AliOSS region", "AliOSS region ID for V4 signing, e.g. cn-beijing.", ApplyModeRestartRequired, false, true, nil, func() bool { return cfg.If("AliOSS") }, func() any { return conf.AliOSSSetting.Region }, func() any { return bootstrapConfig.AliOSS.Region }, validateTrimmedMax("alioss.region", 64), func(v any) { conf.AliOSSSetting.Region = v.(string) }),
 		stringDefWithActive("alioss.access_key_id", "storage", "alioss", "AliOSS access key ID", "AliOSS access key ID.", ApplyModeRestartRequired, false, true, nil, func() bool { return cfg.If("AliOSS") }, func() any { return conf.AliOSSSetting.AccessKeyID }, func() any { return bootstrapConfig.AliOSS.AccessKeyID }, validateTrimmedMax("alioss.access_key_id", 255), func(v any) { conf.AliOSSSetting.AccessKeyID = v.(string) }),
 		stringDefWithActive("alioss.access_key_secret", "storage", "alioss", "AliOSS access key secret", "AliOSS secret key.", ApplyModeRestartRequired, true, true, nil, func() bool { return cfg.If("AliOSS") }, func() any { return conf.AliOSSSetting.AccessKeySecret }, func() any { return bootstrapConfig.AliOSS.AccessKeySecret }, validateTrimmedMax("alioss.access_key_secret", 512), func(v any) { conf.AliOSSSetting.AccessKeySecret = v.(string) }),
 		stringDefWithActive("alioss.bucket", "storage", "alioss", "AliOSS bucket", "AliOSS bucket name.", ApplyModeRestartRequired, false, true, nil, func() bool { return cfg.If("AliOSS") }, func() any { return conf.AliOSSSetting.Bucket }, func() any { return bootstrapConfig.AliOSS.Bucket }, validateTrimmedMax("alioss.bucket", 255), func(v any) { conf.AliOSSSetting.Bucket = v.(string) }),

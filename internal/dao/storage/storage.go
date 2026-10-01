@@ -6,6 +6,7 @@ package storage
 
 import (
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/BZYA-Community/WebsiteCore/internal/conf"
@@ -16,12 +17,20 @@ import (
 )
 
 func MustAliossService() (core.ObjectStorageService, core.VersionInfo) {
-	client, err := oss.New(conf.AliOSSSetting.Endpoint, conf.AliOSSSetting.AccessKeyID, conf.AliOSSSetting.AccessKeySecret)
+	s := conf.AliOSSSetting
+	if s.Region == "" || strings.HasPrefix(s.Region, "oss-") {
+		logrus.Fatalf("storage.MustAliossService AliOSS.Region invalid: %q, want region ID like cn-beijing", s.Region)
+	}
+	if strings.Contains(s.Endpoint, "://") {
+		logrus.Fatalf("storage.MustAliossService AliOSS.Endpoint must not contain scheme: %q", s.Endpoint)
+	}
+	// 新建Bucket已逐步停用V1签名, 且SDK对无scheme的endpoint默认走http
+	client, err := oss.New("https://"+s.Endpoint, s.AccessKeyID, s.AccessKeySecret, oss.Region(s.Region), oss.AuthVersion(oss.AuthV4))
 	if err != nil {
 		logrus.Fatalf("storage.MustAliossService create client err: %s", err)
 	}
 
-	bucket, err := client.Bucket(conf.AliOSSSetting.Bucket)
+	bucket, err := client.Bucket(s.Bucket)
 	if err != nil {
 		logrus.Fatalf("storage.MustAliossService create bucket err: %s", err)
 	}

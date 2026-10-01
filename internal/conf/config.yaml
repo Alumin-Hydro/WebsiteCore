@@ -138,6 +138,7 @@ ObjectStorage: # 对象存储通用配置
   TempDir: tmp      # 临时对象存放目录名
 AliOSS: # 阿里云OSS存储配置
   Endpoint: 
+  Region:           # V4签名用的地域ID, 如 cn-beijing (不是 oss-cn-beijing)
   AccessKeyID: 
   AccessKeySecret: 
   Bucket: 
