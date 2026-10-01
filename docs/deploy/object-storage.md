@@ -38,9 +38,10 @@ Make sure `SavePath` exists and is writable by the service user; include it in y
 
 | Item | Requirement |
 | --- | --- |
-| Bucket | Read/write ACL "public read, private write" (avatars and images must be publicly readable; `attachment/` objects stay protected by signed URLs) |
-| AccessKey | Create a **RAM sub-account** with OSS permissions scoped to this bucket only — never use the root account's AK |
-| Endpoint | Region endpoint, e.g. `oss-cn-beijing.aliyuncs.com`. If the app runs on an ECS in the same region, use the **internal** endpoint (`oss-cn-beijing-internal.aliyuncs.com`) — free traffic, lower latency |
+| Bucket | Keep the ACL **private**. Avatars and post images (`public/*`) must be anonymously readable, while `attachment/*` (tweet attachments, course videos) must only be reachable through signed URLs. Buckets created since late 2025 have *Block Public Access* on by default: turn it off for this bucket, then add a bucket policy that grants anonymous `oss:GetObject` on `{bucket}/public/*` only. A "public read" ACL would expose `attachment/` as well |
+| AccessKey | Create a **RAM sub-account** with OSS permissions scoped to this bucket only — never use the root account's AK. The app needs only `oss:PutObject`, `oss:GetObject` and `oss:DeleteObject` on `{bucket}/*` |
+| Endpoint | Public region endpoint without scheme, e.g. `oss-cn-beijing.aliyuncs.com`. Do not use the internal (`-internal`) endpoint: the same host is handed to browsers for signed downloads and course video direct upload |
+| Region | Region ID for V4 signing, e.g. `cn-beijing` (not `oss-cn-beijing`) |
 | Domain | Public object domain: either the bucket's external domain `{bucket}.oss-cn-{region}.aliyuncs.com`, or a custom/CDN domain bound to the bucket in the OSS console (CNAME resolved) |
 
 ### 2. Configure the app
@@ -50,7 +51,8 @@ Features:
   Default: [..., "AliOSS"]     # replaces LocalOSS
 
 AliOSS:
-  Endpoint: oss-cn-beijing.aliyuncs.com
+  Endpoint: oss-cn-beijing.aliyuncs.com   # no scheme
+  Region: cn-beijing
   AccessKeyID: LTAI5t...
   AccessKeySecret: <secret>
   Bucket: my-bucket
@@ -58,6 +60,8 @@ AliOSS:
 ```
 
 Object URLs are built as `https://{Domain}/{objectKey}` (AliOSS is always https). Direct video uploads target `https://{Bucket}.{Endpoint}` regardless of `Domain` (which may be a CDN domain).
+
+All requests, signed URLs and direct-upload forms use OSS Signature V4 over https; Alibaba Cloud is phasing out V1 signatures for buckets created after 2025-09-01. The app refuses to start when `Region` is empty or `Endpoint` contains a scheme.
 
 ### 3. Configure bucket CORS (required for course video direct upload)
 
@@ -117,9 +121,11 @@ The startup log tells you which mode is active (`use OSS:Direct feature` / `OSS:
 | Symptom | Cause / fix |
 | --- | --- |
 | Console: `blocked by CORS policy ... No 'Access-Control-Allow-Origin'` | Bucket has no CORS rule — see section 3. Verify with a preflight: `curl -i -X OPTIONS "https://{bucket}.{endpoint}/" -H "Origin: {your-origin}" -H "Access-Control-Request-Method: POST"` |
-| Video upload returns `400` with `x-oss-ec: 0002-00000703` | PostObject form is missing/misplacing the signature. Required fields: `key`, `policy`, `OSSAccessKeyId`, `Signature` (V1 signature, capital S), `success_action_status`, and `file` **last** |
+| Video upload returns `400` with `x-oss-ec: 0002-00000703` | PostObject form is missing/misplacing the signature. Required fields: `key`, `policy`, `x-oss-signature-version`, `x-oss-credential`, `x-oss-date`, `x-oss-signature`, `success_action_status`, and `file` **last** |
+| Uploads or signed links return `400 InvalidArgument` / `AuthorizationArgumentError` | `AliOSS.Region` does not match the bucket's region |
+| `403 AccessDenied` with `V1 signature is forbidden` (`0002-00000080`) | A build from before V4 support is talking to a new bucket — upgrade and set `AliOSS.Region` |
 | Video upload returns `403 InvalidAccessKeyId` / `SignatureDoesNotMatch` | Wrong AK in config, or `AccessKeySecret` mismatched with the ID; RAM user lacks OSS write permission on the bucket |
-| Uploaded images 403 when opened | Bucket ACL is private-read; set "public read, private write" or bind a CDN with proper auth |
+| Uploaded images 403 when opened | No anonymous read on `public/*`: Block Public Access is still on, or the `public/*` bucket policy is missing (section 1); alternatively serve through a CDN with private-origin auth |
 | Avatar generation fails at registration (500, `avatar.Generate err` in logs) | Storage backend unreachable or not writable: LocalOSS `SavePath` missing/read-only, or AliOSS credentials/bucket wrong |
 | Object URLs point at `127.0.0.1` in production | `LocalOSS.Domain` still the dev value — set it to the public domain (and `Secure: true` for https) |
 | Direct upload offered but you expected proxy | Course video direct mode activates only with the `AliOSS` feature; `LocalOSS` deployments always proxy through the backend |
