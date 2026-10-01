@@ -81,8 +81,10 @@ export interface PageResp<T> {
 export interface UploadCredential {
   mode: 'direct' | 'proxy';
   host?: string;
-  access_key_id?: string;
   policy?: string;
+  signature_version?: string;
+  credential?: string;
+  date?: string;
   signature?: string;
   key?: string;
   expire?: number;

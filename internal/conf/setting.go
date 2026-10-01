@@ -199,6 +199,7 @@ type aliOSSConf struct {
 	AccessKeyID     string
 	AccessKeySecret string
 	Endpoint        string
+	Region          string
 	Bucket          string
 	Domain          string
 }

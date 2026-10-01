@@ -6,8 +6,9 @@ package web
 
 import (
 	"crypto/hmac"
-	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -590,36 +591,62 @@ func (s *courseAdminSrv) CourseUploadCredential(req *web.CourseUploadCredentialR
 		return &web.CourseUploadCredentialResp{Mode: "proxy"}, nil
 	}
 	objectKey := courseVideoPrefix + time.Now().Format("200601") + "/" + uuid.Must(uuid.NewV4()).String() + fileExt
-	// Ali OSS PostObject policy: 标准表单直传签名(密钥不出服务端)
-	expiration := time.Now().Add(10 * time.Minute).UTC().Format("2006-01-02T15:04:05.000Z")
+	ali := conf.AliOSSSetting
+	resp, err := newPostPolicyV4(time.Now(), ali.AccessKeyID, ali.AccessKeySecret, ali.Region, ali.Bucket, objectKey)
+	if err != nil {
+		logrus.Errorf("marshal oss policy err: %s", err)
+		return nil, web.ErrCourseUploadCredentialFailed
+	}
+	// 直传地址用Endpoint而非Domain(Domain可能是CDN/自定义域名)
+	resp.Host = fmt.Sprintf("https://%s.%s", ali.Bucket, ali.Endpoint)
+	return resp, nil
+}
+
+// newPostPolicyV4 Ali OSS PostObject V4 表单直传签名(密钥不出服务端), 日期一律按UTC
+// https://help.aliyun.com/zh/oss/developer-reference/signature-version-4-recommend
+func newPostPolicyV4(now time.Time, ak, sk, region, bucket, key string) (*web.CourseUploadCredentialResp, error) {
+	now = now.UTC()
+	day := now.Format("20060102")
+	date := now.Format("20060102T150405Z")
+	credential := ak + "/" + day + "/" + region + "/oss/aliyun_v4_request"
+	expire := now.Add(10 * time.Minute)
 	policyBytes, err := json.Marshal(map[string]any{
-		"expiration": expiration,
+		"expiration": expire.Format("2006-01-02T15:04:05.000Z"),
 		"conditions": []any{
-			map[string]string{"bucket": conf.AliOSSSetting.Bucket},
-			[]string{"eq", "$key", objectKey},
+			map[string]string{"bucket": bucket},
+			map[string]string{"x-oss-signature-version": "OSS4-HMAC-SHA256"},
+			map[string]string{"x-oss-credential": credential},
+			map[string]string{"x-oss-date": date},
+			[]string{"eq", "$key", key},
 			[]any{"content-length-range", 1, 524288000}, // 500MB
 			[]string{"eq", "$success_action_status", "200"},
 		},
 	})
 	if err != nil {
-		logrus.Errorf("marshal oss policy err: %s", err)
-		return nil, web.ErrCourseUploadCredentialFailed
+		return nil, err
 	}
 	policy := base64.StdEncoding.EncodeToString(policyBytes)
-	mac := hmac.New(sha1.New, []byte(conf.AliOSSSetting.AccessKeySecret))
-	mac.Write([]byte(policy))
-	signature := base64.StdEncoding.EncodeToString(mac.Sum(nil))
-	// 直传地址用Endpoint而非Domain(Domain可能是CDN/自定义域名)
-	host := fmt.Sprintf("https://%s.%s", conf.AliOSSSetting.Bucket, conf.AliOSSSetting.Endpoint)
 	return &web.CourseUploadCredentialResp{
-		Mode:        "direct",
-		Host:        host,
-		AccessKeyID: conf.AliOSSSetting.AccessKeyID,
-		Policy:      policy,
-		Signature:   signature,
-		Key:         objectKey,
-		Expire:      time.Now().Add(10 * time.Minute).Unix(),
+		Mode:             "direct",
+		Policy:           policy,
+		SignatureVersion: "OSS4-HMAC-SHA256",
+		Credential:       credential,
+		Date:             date,
+		Signature:        signPostPolicyV4(sk, region, day, policy),
+		Key:              key,
+		Expire:           expire.Unix(),
 	}, nil
+}
+
+// signPostPolicyV4 签名密钥由 "aliyun_v4"+SK 依次对 日期/地域/"oss"/"aliyun_v4_request" 做HMAC派生, 再对policy签名
+func signPostPolicyV4(sk, region, day, policy string) string {
+	key := []byte("aliyun_v4" + sk)
+	for _, v := range []string{day, region, "oss", "aliyun_v4_request", policy} {
+		mac := hmac.New(sha256.New, key)
+		mac.Write([]byte(v))
+		key = mac.Sum(nil)
+	}
+	return hex.EncodeToString(key)
 }
 
 // UploadCourseVideo 代理模式上传课程视频(非AliOSS或直传不可用时)
