@@ -1,8 +1,8 @@
-<!-- Documentation PR. Docs-only changes skip CI, so the checks below are on you. -->
+<!-- Documentation PR. CI does not check links or commands, so the checks below are on you. -->
 
 ## Linked issue
 
-<!-- closes #xx, if any -->
+<!-- closes #xx (resolves the issue) or refs #xx (partial) -->
 
 ## What changed
 
@@ -13,5 +13,5 @@
 - [ ] Every link I added or touched resolves (relative paths checked from the file's own directory)
 - [ ] Every command I documented matches the current `Makefile` / `scripts/` / workflows
 - [ ] Version numbers, ports, image tags, and config keys match the code (`go.mod`, `docker-compose.dev.yml`, `internal/conf/`, `config.yaml.sample`)
-- [ ] Language policy respected: docs in English; only root `README_ZH.md` (and the two community charters) in Chinese
+- [ ] Language policy respected: docs in English; only root `README_ZH.md` in Chinese
 - [ ] No secrets, internal hostnames, or personal data in examples
