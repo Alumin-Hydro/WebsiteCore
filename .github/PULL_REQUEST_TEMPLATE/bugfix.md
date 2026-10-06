@@ -2,7 +2,7 @@
 
 ## Linked issue
 
-<!-- closes #xx -->
+<!-- closes #xx (resolves the issue) or refs #xx (partial) -->
 
 ## Root cause
 
@@ -20,13 +20,14 @@
 - [ ] `golangci-lint run ./...` clean
 - [ ] `go test ./...` all green
 - [ ] Touched `mirc/`: ran `make gen-mir`, no hand edits in `auto/`
-- [ ] Touched schema: migration pair in **both** dialects, verified with a `migration`-tagged build
+- [ ] Touched schema: migration pair in `scripts/migration/postgres/` (PostgreSQL only), verified with a `migration`-tagged build
 - [ ] Touched config: `internal/conf/config.yaml` and `config.yaml.sample` updated together
 - [ ] No build artifacts committed
 
 ## BVT — frontend (mandatory if `web/` changed)
 
 - [ ] `npm run lint` — 0 errors
+- [ ] `npm run i18n:check` — no missing / unused keys, zh-CN ↔ en in parity
 - [ ] `npm run build` — succeeds
 - [ ] No overlapping or overflowing content at the 7 standard viewports (`verify_sidebar_830.py` / `measure_width.py` / screenshots attached)
 
@@ -35,7 +36,7 @@
 <!-- How did you prove the bug is gone AND nothing else broke? -->
 
 - Reproduced the bug before the fix: <!-- how (script / curl / UI steps) -->
-- Verified the fix: <!-- paste the output or attach screenshots -->
+- Verified the fix: <!-- screenshots or a recording of your hands-on test, showing the commit tested (e.g. run `git log -1 --oneline` first); script output alone is not enough -->
 - Relevant `scripts/test_*.py` results: PASS=__ FAIL=__ (delete lines that do not apply)
 
 ## Impact
